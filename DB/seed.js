@@ -5,10 +5,12 @@ const {
     getAllUsers,
     getUserById,
     createPost,
+    createTags,
     updatePost,
     getAllPosts,
     getPostsByUser,
-    addTagsToPost
+    addTagsToPost,
+    getPostsByTagName
   } = require('./index');
   
   async function dropTables() {
@@ -49,7 +51,18 @@ const {
           content TEXT NOT NULL,
           active BOOLEAN DEFAULT true
         );
+        CREATE TABLE tags (
+            id SERIAL PRIMARY KEY,
+            name varchar(255) NOT NULL
+            );
+    
+        CREATE TABLE post_tags (
+                "postId" INTEGER REFERENCES posts(id),
+                "tagId" INTEGER REFERENCES tags(id)
+                );
+    
       `);
+    
   
       console.log("Finished building tables!");
     } catch (error) {
@@ -97,19 +110,21 @@ const {
         authorId: albert.id,
         title: "First Post",
         content: "This is my first post. I hope I love writing blogs as much as I love writing them.",
-        tags: "#tag, #moretags, #anothertag"
+        tags: ["#happy", "#youcandoanything"]
       });
   
       await createPost({
         authorId: sandra.id,
         title: "How does this work?",
-        content: "Seriously, does this even do anything?"
+        content: "Seriously, does this even do anything?",
+        tags: ["#happy", "#worst-day-ever"]
       });
   
       await createPost({
         authorId: glamgal.id,
         title: "Living the Glam Life",
-        content: "Do you even? I swear that half of you are posing."
+        content: "Do you even? I swear that half of you are posing.",
+        tags: ["#happy", "#youcandoanything", "#canmandoeverything"]
       });
       console.log("Finished creating posts!");
     } catch (error) {
@@ -143,19 +158,18 @@ const {
   }
   
   async function rebuildDB() {
-  try {
-    client.connect();
-
-    await dropTables();
-    await createTables();
-    await createInitialUsers();
-    await createInitialPosts();
-    await createInitialTags();
-  } catch (error) {
-    console.log("Error during rebuildDB")
-    throw error;
+    try {
+      client.connect();
+  
+      await dropTables();
+      await createTables();
+      await createInitialUsers();
+      await createInitialPosts();
+    } catch (error) {
+      console.log("Error during rebuildDB")
+      throw error;
+    }
   }
-}
   
   async function testDB() {
     try {
@@ -188,6 +202,16 @@ const {
       console.log("Result:", albert);
   
       console.log("Finished database tests!");
+
+      console.log("Calling updatePost on posts[1], only updating tags");
+    const updatePostTagsResult = await updatePost(posts[1].id, {
+      tags: ["#youcandoanything", "#redfish", "#bluefish"]
+    });
+    console.log("Result:", updatePostTagsResult);
+
+    console.log("Calling getPostsByTagName with #happy");
+    const postsWithHappy = await getPostsByTagName("#happy");
+    console.log("Result:", postsWithHappy);
     } catch (error) {
       console.log("Error during testDB");
       throw error;

@@ -10,7 +10,7 @@ async function createUser({
 }) {
   try {
     const { rows: [ user ] } = await client.query(`
-      INSERT INTO users(username, password, name, location) 
+      INSERT INTO users(username, password, name, location)
       VALUES($1, $2, $3, $4) 
       ON CONFLICT (username) DO NOTHING 
       RETURNING *;
@@ -62,7 +62,7 @@ async function getUserById(userId) {
     const { rows: [ user ] } = await client.query(`
       SELECT id, username, name, location, active
       FROM users
-      WHERE id=${ userId }
+      WHERE id=${ userId };
     `);
 
     if (!user) {
@@ -85,7 +85,7 @@ async function createPost({
   }) {
     try {
       const { rows: [ post ] } = await client.query(`
-        INSERT INTO posts("authorId", title, content) 
+        INSERT INTO posts("authorId", title, content)
         VALUES($1, $2, $3)
         RETURNING *;
       `, [authorId, title, content]);
@@ -94,6 +94,7 @@ async function createPost({
   
       return await addTagsToPost(post.id, tagList);
     } catch (error) {
+        console.log("There was an error in createPost function/where function you're in")
       throw error
     };
   }
@@ -167,8 +168,8 @@ async function getAllPosts() {
   async function getPostsByUser(userId) {
     try {
       const { rows: postIds } = await client.query(`
-        SELECT id 
-        FROM posts 
+        SELECT id
+        FROM posts
         WHERE "authorId"=${ userId };
       `);
   
@@ -195,18 +196,19 @@ async function createTags(tagList) {
   
     try {
         await client.query(
-        `INSERT INTO tags(name);
-        VALUES (${insertValues});
+        `INSERT INTO tags(name)
+        VALUES (${insertValues})
         ON CONFLICT (name) DO NOTHING;`, tagList);
 
         const { rows } = await client.query
         (
-            `SELECT * FROM tags;
-            WHERE name;
-            VALUES (${selectValues});`, tagList);
+            `SELECT * FROM tags
+            WHERE name
+            IN (${selectValues});`, tagList);
     return rows;
 
     } catch (error) {
+        console.log('There was an error in tags.')
       throw error;
     }
   }
@@ -214,10 +216,9 @@ async function createTags(tagList) {
   async function createPostTag(postId, tagId) {
     try {
       await client.query(`
-        INSERT INTO post_tags("postId", "tagId");
-        VALUES ($1, $2);
+        INSERT INTO post_tags("postId", "tagId")
+        VALUES ($1, $2)
         ON CONFLICT ("postId", "tagId") DO NOTHING;
-        UNIQUE ("postId", "tagId");
       `, [postId, tagId]);
     } catch (error) {
       throw error;
@@ -234,9 +235,11 @@ async function createTags(tagList) {
   
       return await getPostById(postId);
     } catch (error) {
+        console.log("There's an error in addTags")
       throw error;
     }
   }
+  /* ANCHOR - colorful note */
 
   async function getPostById(postId) {
     try {
@@ -247,7 +250,7 @@ async function createTags(tagList) {
       `, [postId]);
   
       const { rows: tags } = await client.query(`
-        SELECT tags *
+        SELECT tags.*
         FROM tags
         JOIN post_tags ON tags.id=post_tags."tagId"
         WHERE post_tags."postId"=$1;
@@ -266,17 +269,18 @@ async function createTags(tagList) {
   
       return post;
     } catch (error) {
+        console.log("There's an error in getPostByID")
       throw error;
     }
   }
   async function getPostsByTagName(tagName) {
     try {
       const { rows: postIds } = await client.query(`
-        SELECT posts.id
-        FROM posts
-        JOIN post_tags ON posts.id=post_tags."postId"
-        JOIN tags ON tags.id=post_tags."tagId"
-        WHERE tags.name=$1;
+      SELECT posts.id
+      FROM posts
+      JOIN post_tags ON posts.id=post_tags."postId"
+      JOIN tags ON tags.id=post_tags."tagId"
+      WHERE tags.name=$1;   
       `, [tagName]);
   
       return await Promise.all(postIds.map(

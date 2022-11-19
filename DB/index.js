@@ -239,7 +239,16 @@ async function createTags(tagList) {
       throw error;
     }
   }
-  /* ANCHOR - colorful note */
+
+  async function getAllTags() {
+    try {
+        const { rows } = await client.query
+        (`SELECT * FROM tags`);
+        return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async function getPostById(postId) {
     try {
@@ -304,5 +313,6 @@ module.exports = {
   createTags,
   getPostsByUser,
   addTagsToPost,
-  getPostsByTagName
+  getPostsByTagName,
+  getAllTags
 }

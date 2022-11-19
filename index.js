@@ -4,7 +4,6 @@ const server = express();
 const apiRouter = require('./api');
 const morgan = require('morgan');
 server.use(morgan('dev'));
-require('dotenv').config();
 
 server.use(express.json())
 
@@ -26,3 +25,4 @@ server.use('/api', apiRouter);
     console.log("A get request was made to /api");
     res.send({ message: "success" });
   });
+  
